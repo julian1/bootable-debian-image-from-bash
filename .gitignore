@@ -1,0 +1,9 @@
+*.swp
+*.swo
+*.swn
+*.swm
+*.byte
+*.native
+fs.*
+jessie
+
