@@ -29,7 +29,7 @@ mkfs.ext4 /dev/loop1 || exit
 mount /dev/loop1 mnt || exit
 ls mnt
 
-[ ! -d jessie ] && debootstrap jessie mnt/ http://mirror.aarnet.edu.au/debian/
+[ ! -d jessie ] && debootstrap jessie jessie/ http://mirror.aarnet.edu.au/debian/
 
 cp -rp jessie/* mnt || exit
 
