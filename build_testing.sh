@@ -2,16 +2,18 @@
 
 # Editable configuration!
 KEYS="$(cat /home/meteo/.ssh/id_rsa.pub)"
+# useful for debug
 ROOTPASSWD=root
 SIZE=1G
 # CONSOLE or VGA default
 CONSOLE=false
 # install minimal python, useful for ansible etc
-PYTHON=false
+PYTHON=true
 # Mirror to use
 MIRROR=http://mirror.aarnet.edu.au/debian/
 DIST=testing
 KERNEL='4.3.0-1-amd64'
+INTERFACE=enp3s0
 
 # put more than one kernel on there?
 
@@ -101,13 +103,14 @@ LABEL linux
 EOF
 fi
 
+# Deb/Ubuntian interface naming changes http://forums.debian.net/viewtopic.php?f=19&t=122795
 # network interfaces
-cat > ./etc/network/interfaces << EOF
+cat > ./etc/network/interfaces <<- EOF
 auto lo
 iface lo inet loopback
 
-allow-hotplug eth0
-iface eth0 inet dhcp
+allow-hotplug $INTERFACE
+iface $INTERFACE inet dhcp
 EOF
 
 # allow root ssh
