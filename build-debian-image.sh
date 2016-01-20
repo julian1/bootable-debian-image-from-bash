@@ -1,0 +1,188 @@
+#!/bin/bash
+
+
+############################
+# Configuration!
+
+KEYS="$(cat /home/meteo/.ssh/authorized_keys)"
+# DANGEROUS - edit me!
+ROOTPASSWD=root
+FSSIZE=1G
+# MIRROR=http://mirror.internode.on.net/pub/debian/
+MIRROR=http://ftp.us.debian.org/debian/
+DIST=stretch
+KERNEL=4.9.0-4-amd64
+PYTHON=yes
+
+# Jessie
+# DIST=jessie
+# KERNEL=3.16.0-4-amd64
+
+
+############################
+# sanity
+
+if [[ $EUID -ne 0 ]]; then
+   echo "Must be root for mount/losetup"
+   exit 1
+fi
+
+if [ $( mount | grep -c loop ) != 0 ] ; then
+   echo "loop device already in use"
+   exit 1
+fi
+
+if [ -z "$KEYS" ]; then
+  echo "Need ssh keys!"
+  exit 1
+fi
+
+if [ "$ROOTPASSWD" = "root" ]; then
+  echo "WARNING change the root password!"
+  # exit 1
+fi
+
+
+############################
+# debootstrap download and cache
+
+set -x
+
+cache="./build/$DIST-cache"
+target="./build/$DIST-$KERNEL.img"
+mnt="./build/mnt"
+
+
+# delete stale cache. eg. 1 day.
+if [ -d "$cache" ]; then
+  now=$(date +%s)
+  file=$(stat -c %Y "$cache")
+  if [ $now -gt $(( $file + 86400 )) ]; then
+    echo "deleting stale cache!"
+    rm -rf "$cache"
+  else
+    echo "cache ok!"
+  fi
+fi
+
+
+# download bootstrap files locally. note use || exit
+[ ! -d "$cache" ] && debootstrap "$DIST" "$cache/" $MIRROR
+
+
+############################
+# create image
+
+rm $target
+rm -rf "$mnt"
+mkdir "$mnt" || exit
+
+# image
+dd if=/dev/zero of=$target bs=$FSSIZE count=1 || exit
+
+chmod 666 $target
+
+# partition
+fdisk $target << EOF
+n
+p
+1
+2048
+
+a
+p
+w
+EOF
+
+
+############################
+# initial filesystem
+
+resources_cleanup () {
+  # cleanup see, https://stackoverflow.com/questions/3338030/multiple-bash-traps-for-the-same-signal
+
+  for i in /proc /sys /dev; do
+    umount "$mnt/$i";
+  done
+
+  umount "$mnt"
+  losetup -D
+  rmdir "$mnt"
+}
+
+trap resources_cleanup EXIT
+
+
+losetup -f $target /dev/loop0 || exit
+losetup -f $target -o $((2048 * 512)) /dev/loop1 || exit
+
+
+# mkfs
+mkfs.ext4 /dev/loop1 || exit
+
+# grab filesystem uuid for later
+UUID=$( blkid -p -s UUID /dev/loop1 | sed 's/.*="\([^"]*\).*/\1/' )
+
+
+# mount  the device
+mount /dev/loop1 "$mnt" || exit
+
+# copy debootstrap
+cp -rp $cache/* "$mnt" || exit
+
+
+############################
+# install kernel, and configure
+
+# mount systems
+for i in /proc /sys /dev; do
+  mount -B $i "$mnt/$i";
+done || exit
+
+
+# chroot and install kernel, boot config, ssh
+chroot --userspec=0:0 "$mnt" <<- EOF
+# Install kernel
+apt-get -y install linux-image-$KERNEL
+
+apt-get -y install extlinux
+mkdir -p /boot/syslinux
+extlinux --install /boot/syslinux
+dd bs=440 conv=notrunc count=1 if=/usr/lib/syslinux/mbr/mbr.bin of=/dev/loop0
+
+cat > /boot/syslinux/syslinux.cfg <<- EOF2
+CONSOLE 0
+SERIAL 0 115200 0
+DEFAULT linux
+PROMPT 0
+LABEL linux
+  SAY Now booting the kernel from SYSLINUX...
+  KERNEL /boot/vmlinuz-$KERNEL
+  APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-$KERNEL vga=normal fb=false console=ttyS0,115200n8 net.ifnames=0 biosdevname=0
+EOF2
+
+cat > /etc/network/interfaces << EOF2
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet dhcp
+EOF2
+
+if [ -n "$ROOTPASSWD" ]; then
+  echo root:$ROOTPASSWD | chpasswd
+fi
+
+if [ -n "$KEYS" ]; then
+  apt-get -y install ssh
+  mkdir /root/.ssh
+  echo "$KEYS" > /root/.ssh/authorized_keys
+  chmod 400 /root/.ssh/authorized_keys
+  sed -i 's/PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+fi
+
+if [ $PYTHON = "yes" ]; then
+  apt-get -y install python-minimal
+fi
+EOF
+

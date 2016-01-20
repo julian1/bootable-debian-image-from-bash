@@ -1,16 +1,17 @@
 
-### Create a bootable linux image using only basic shell commands
+### Create bootable linux images with basic shell tools
 
-Uses fdisk, losetup, debootstrap, chroot, syslinux
+Simple example code using, fdisk, losetup, debootstrap, chroot, syslinux
 
-### build an image
+#### Build image
 ```
-sudo ./build.sh
+# edit config vars, then
+./build-debian-image.sh
 ```
 
-### example to burn to a thumbdrive
+#### boot using kvm
 ```
-dd if=fs.img of=/dev/sdb bs=1M
+./tools/start-kvm.sh ./build/stretch-4.9.0-4-amd64.img
 ```
 
 

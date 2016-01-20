@@ -1,8 +1,25 @@
 #!/bin/bash -x
 
-for i in ./mnt/proc ./mnt/sys ./mnt/dev; do umount .$i; done
+mnt="./build/mnt"
 
-umount mnt
+set -x
 
+for i in /proc /sys /dev; do
+  umount "$mnt/$i";
+done
+
+umount "$mnt"
 losetup -D
+rmdir "$mnt"
+
+
+# pushd build
+# pushd mnt
+
+# for i in /proc /sys /dev; do umount .$i; done
+# popd # mnt
+# umount mnt
+# losetup -D
+
+# popd # build
 

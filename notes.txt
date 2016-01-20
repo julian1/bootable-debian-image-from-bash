@@ -1,0 +1,53 @@
+
+
+#### Mount and do a change root to search
+```
+sudo ./mount.sh
+sudo chroot build/mnt/
+
+# look for appropriate kernel to install
+apt-cache search linux-image
+```
+
+#### Boot image with kvm and redirect console to stdout
+```
+kvm ./build/precise-3.2.0-23-virtual.img -nographic
+
+# login root,root
+/sbin/shutdown -h now
+```
+
+
+#### Reset kvm bridge tap
+```
+sudo /etc/qemu-ifdown mybr0
+```
+
+#### Create rescue thumbdrive
+```
+# if thumbdrive is /dev/sdb,
+sudo dd if=fs.img of=/dev/sdb bs=1M
+```
+
+#### TODO
+```
+try zfs - on initrd - non encrypted
+figure out bridge tap without root permissions
+```
+
+# CONSOLE 0
+# SERIAL 0 115200 0
+# APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-$KERNEL acpi=off
+# APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-$KERNEL vga=normal fb=false console=ttyS0,115200n8
+
+
+# make a virtualbox image if we can
+# rm fs.vdi
+# which VBoxManage && VBoxManage convertfromraw --format VDI fs.img fs.vdi && chmod 666 fs.vdi
+
+# Could neat to make a COW image as well?
+
+# make a virtualbox image if we can
+# rm fs.vdi
+# which VBoxManage && VBoxManage convertfromraw --format VDI fs.img fs.vdi && chmod 666 fs.vdi
+
