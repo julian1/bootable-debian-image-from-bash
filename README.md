@@ -7,15 +7,19 @@ Uses fdisk, losetup, debootstrap, chroot, syslinux
 ```
 # Edit build vars at top of file
 sudo ./build.sh
+
+# use umount.sh to clean up mounts if ./build.sh does not complete
 ```
 
 ### Run/boot using kvm
 ```
+# Simple
 sudo chown $USER fs.img 
 kvm fs.img 
 
-# or with bridge tap and running dhcp etc.
-sudo kvm fs.img  -net nic -net tap,ifname=mybr0
+# Using bridge tap with running dhcp service
+sudo kvm fs.img -net nic -net tap,ifname=mybr0
+ssh 10.1.1.20
 ```
 
 ### Copy to a thumbdrive
