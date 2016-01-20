@@ -1,5 +1,5 @@
 
-### Create a bootable linux image using only basic shell commands
+### Create a bootable linux image using only basic shell tools
 
 Uses fdisk, losetup, debootstrap, chroot, syslinux
 
