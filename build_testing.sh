@@ -2,7 +2,7 @@
 
 # Editable configuration!
 KEYS="$(cat /home/meteo/.ssh/id_rsa.pub)"
-# ROOTPASSWD=root
+ROOTPASSWD=root
 SIZE=1G
 # CONSOLE or VGA default
 CONSOLE=false
@@ -12,6 +12,8 @@ PYTHON=false
 MIRROR=http://mirror.aarnet.edu.au/debian/
 DIST=testing
 KERNEL='4.3.0-1-amd64'
+
+# put more than one kernel on there?
 
 ############################
 
@@ -75,6 +77,7 @@ fi
 # grab filesystem uuid
 UUID=$( blkid -p -s UUID  /dev/loop1 | sed 's/.*="\([^"]*\).*/\1/' )
 
+# https://lime-technology.com/wiki/index.php/Boot_Codes
 # want testing 4 kernel as well....
 # syslinux boot configuration
 # the indenting around if/else is needed
@@ -82,7 +85,6 @@ if [ $CONSOLE = "true" ]; then
 cat > ./boot/syslinux/syslinux.cfg <<- EOF
 CONSOLE 0
 SERIAL 0 115200 0
-
 DEFAULT linux
 LABEL linux
   SAY Now booting the kernel from SYSLINUX...
@@ -95,7 +97,7 @@ DEFAULT linux
 LABEL linux
   SAY Now booting the kernel from SYSLINUX...
   KERNEL ../vmlinuz-$KERNEL
-  APPEND rw root=UUID=$UUID initrd=../initrd.img-$KERNEL
+  APPEND acpi=off rw root=UUID=$UUID initrd=../initrd.img-$KERNEL
 EOF
 fi
 
