@@ -1,28 +1,31 @@
 #!/bin/bash -x
 
-# Editable configuration!
 
 SSHKEYS="$(cat /home/$USER/.ssh/id_rsa.pub)"
 # For creating a rescue disk and debug
 ROOTPASSWD=root
+# Filesystem image size
 SIZE=1G
-# Serial or VGA default
+# Serial console or VGA default
 CONSOLE=true
-# To install minimal python, useful for ansible etc
-PYTHON=true
-# Mirror to use
+# Distribution mirror
 MIRROR=http://mirror.aarnet.edu.au/debian/
-DIST=testing
+# Distribution version
+DIST_VERSION=testing
+# Kernel version
 KERNEL_VERSION='4.3.0-1-amd64'
-# Possible to generalize name across hardware...
+# TODO Need to generalize across hardware...
 INTERFACE=enp3s0
+# Install minimal python, used for ansible provisioning etc
+PYTHON=false
 
-# put more than one kernel on there?
+
+# Support more than one kernel?
 
 ############################
 
 # cache bootstrap files locally
-[ ! -d $DIST ] && debootstrap $DIST $DIST/ $MIRROR
+[ ! -d $DIST_VERSION ] && debootstrap $DIST_VERSION $DIST_VERSION/ $MIRROR
 
 # create image
 rm fs.img
@@ -43,14 +46,13 @@ EOF
 losetup -f fs.img /dev/loop0 || exit
 losetup -f fs.img -o $((2048 * 512)) /dev/loop1 || exit
 
-# mount and copy files across
+# make filesystem, mount and copy files
 mkfs.ext4 /dev/loop1 || exit
 
 [ -d mnt ] || mkdir mnt
 mount /dev/loop1 mnt || exit
-# ls mnt
 
-cp -rp $DIST/* mnt || exit
+cp -rp $DIST_VERSION/* mnt || exit
 
 # mount systems and chroot
 cd mnt

@@ -1,8 +1,9 @@
 
 ### TODO
 
-check if syslinux can automatically find kernel image and ram image without having to 
+- check if syslinux can automatically find kernel image and ram image without having to 
 set as parameters
+- use chroot for all fs modifications instead of modifying directly from host?
 
 ### Create a bootable linux image using only basic shell tools
 
