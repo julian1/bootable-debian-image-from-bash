@@ -26,6 +26,8 @@ INTERFACE=enp3s0
 
 # TODO
 
+# - output filename
+# - change mnt working dir name to tmp
 # - control debootstrap local cache with a flag...
 # - caching will break if interupted - so place a flag/marker file if succeeded
 # - be good to install generic kernel then extract kernel version automatically using uname or lsb_release...
@@ -63,13 +65,15 @@ losetup -f fs.img -o $((2048 * 512)) /dev/loop1 || exit
 # make filesystem, mount and copy files
 mkfs.ext4 /dev/loop1 || exit
 
+# TODO we should be able to get the uuid right now...
+
 [ -d mnt ] || mkdir mnt
 mount /dev/loop1 mnt || exit
 
 cp -rp $DIST_VERSION/* mnt || exit
 
 # create chroot environment
-pushd mnt
+pushd mnt || exit
 for i in /proc /sys /dev; do mount -B $i .$i; done || exit
 
 # install kernel and boot mbr
@@ -81,6 +85,38 @@ mkdir -p /boot/syslinux
 extlinux --install /boot/syslinux
 dd bs=440 conv=notrunc count=1 if=/usr/lib/syslinux/mbr/mbr.bin of=/dev/loop0
 EOF
+
+
+# set root passwd
+if [ -n "$ROOTPASSWD" ]; then
+chroot . <<- EOF
+echo root:$ROOTPASSWD | chpasswd
+EOF
+fi
+
+# ssh keys and root login
+if [ -n "$SSHKEYS" ]; then
+chroot . <<- EOF
+apt-get -y install ssh
+mkdir /root/.ssh
+echo $SSHKEYS > /root/.ssh/authorized_keys
+chmod 400 /root/.ssh/authorized_keys
+sed -i 's/PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+EOF
+fi
+
+# install python
+if [ -n "$PYTHON" ]; then
+chroot . <<- EOF
+apt-get -y install python2.7
+ln -s /usr/bin/python2.7 /usr/bin/python
+EOF
+fi
+
+
+
+### issue with uuid timing...
+
 
 # grab filesystem uuid
 UUID=$( blkid -p -s UUID /dev/loop1 | sed 's/.*="\([^"]*\).*/\1/' )
@@ -119,31 +155,6 @@ allow-hotplug $INTERFACE
 iface $INTERFACE inet dhcp
 EOF
 
-# set root passwd
-if [ -n "$ROOTPASSWD" ]; then
-chroot . <<- EOF
-echo root:$ROOTPASSWD | chpasswd
-EOF
-fi
-
-# ssh keys and root login
-if [ -n "$SSHKEYS" ]; then
-chroot . <<- EOF
-apt-get -y install ssh
-mkdir /root/.ssh
-echo $SSHKEYS > /root/.ssh/authorized_keys
-chmod 400 /root/.ssh/authorized_keys
-sed -i 's/PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
-EOF
-fi
-
-# install python
-if [ -n "$PYTHON" ]; then
-chroot . <<- EOF
-apt-get -y install python2.7
-ln -s /usr/bin/python2.7 /usr/bin/python
-EOF
-fi
 
 # unmount everythiing
 for i in /proc /sys /dev; do umount .$i; done

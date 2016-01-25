@@ -9,7 +9,7 @@ CONSOLE=false
 # install minimal python, useful for ansible etc
 PYTHON=false
 # Mirror to use
-MIRROR=http://mirror.aarnet.edu.au/debian/
+MIRROR=http://mirror.internode.on.net/pub/debian/
 
 ############################
 

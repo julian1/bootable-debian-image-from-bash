@@ -1,8 +1,8 @@
 #!/bin/bash -x
 
-cd mnt
+pushd mnt
 for i in /proc /sys /dev; do umount .$i; done
-cd ..
+popd
 umount mnt
 losetup -D
 
