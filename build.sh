@@ -1,16 +1,20 @@
 #!/bin/bash -x
 
+# Must be run as root
 # More a template, than parameter driven script.
 
 SSHKEYS="$(cat /home/$USER/.ssh/id_rsa.pub)"
 # For creating a rescue disk and debug
 ROOTPASSWD=root
 # Filesystem image size
+# SIZE=500MB
 SIZE=1G
 # Serial console or VGA default
-CONSOLE=true
+# CONSOLE=true
 # Distribution mirror
-MIRROR=http://mirror.aarnet.edu.au/debian/
+# MIRROR=http://mirror.aarnet.edu.au/debian/
+#MIRROR=http://ftp.us.debian.org/debian/
+MIRROR=http://mirror.internode.on.net/pub/debian/
 # Distribution version
 DIST_VERSION=testing
 # Kernel version
@@ -21,6 +25,10 @@ INTERFACE=enp3s0
 # PYTHON=true
 
 # TODO
+
+# - control debootstrap local cache with a flag...
+# - caching will break if interupted - so place a flag/marker file if succeeded
+# - be good to install generic kernel then extract kernel version automatically using uname or lsb_release...
 # - support for multiple kernels at boot?
 # - check if syslinux can automatically find kernel image and ram image without having to 
 # set as parameters
@@ -64,7 +72,7 @@ cp -rp $DIST_VERSION/* mnt || exit
 pushd mnt
 for i in /proc /sys /dev; do mount -B $i .$i; done || exit
 
-# install kernel and boot config
+# install kernel and boot mbr
 chroot . <<- EOF
 apt-get -y install linux-image-$KERNEL_VERSION
 apt-get -y install syslinux
@@ -74,9 +82,8 @@ extlinux --install /boot/syslinux
 dd bs=440 conv=notrunc count=1 if=/usr/lib/syslinux/mbr/mbr.bin of=/dev/loop0
 EOF
 
-
 # grab filesystem uuid
-UUID=$( blkid -p -s UUID  /dev/loop1 | sed 's/.*="\([^"]*\).*/\1/' )
+UUID=$( blkid -p -s UUID /dev/loop1 | sed 's/.*="\([^"]*\).*/\1/' )
 
 # https://lime-technology.com/wiki/index.php/Boot_Codes
 # want testing 4 kernel as well....
@@ -102,7 +109,7 @@ LABEL linux
 EOF
 fi
 
-# Deb/Ubuntian interface naming changes http://forums.debian.net/viewtopic.php?f=19&t=122795
+# Note Deb/Ubuntu interface name change http://forums.debian.net/viewtopic.php?f=19&t=122795
 # network interfaces
 cat > ./etc/network/interfaces <<- EOF
 auto lo

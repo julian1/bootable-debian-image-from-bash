@@ -7,6 +7,8 @@ Uses fdisk, losetup, debootstrap, chroot, syslinux
 ```
 # Edit config vars, then
 sudo ./build.sh
+# or with log
+sudo ./build.sh 2>&1 | tee log.txt
 
 # Use umount.sh to clean up loop mounts if ./build.sh fails
 ```
