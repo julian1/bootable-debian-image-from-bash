@@ -1,5 +1,6 @@
 #!/bin/bash -x
 
+# More a template, than parameter driven script.
 
 SSHKEYS="$(cat /home/$USER/.ssh/id_rsa.pub)"
 # For creating a rescue disk and debug
@@ -20,7 +21,7 @@ INTERFACE=enp3s0
 # PYTHON=true
 
 # TODO
-# - Support more than one kernel?
+# - support for multiple kernels at boot?
 # - check if syslinux can automatically find kernel image and ram image without having to 
 # set as parameters
 # - use chroot for all fs modifications instead of modifying directly from host?
@@ -59,8 +60,8 @@ mount /dev/loop1 mnt || exit
 
 cp -rp $DIST_VERSION/* mnt || exit
 
-# mount systems and chroot
-cd mnt
+# create chroot environment
+pushd mnt
 for i in /proc /sys /dev; do mount -B $i .$i; done || exit
 
 # install kernel and boot config
@@ -111,8 +112,7 @@ allow-hotplug $INTERFACE
 iface $INTERFACE inet dhcp
 EOF
 
-
-# root pass
+# set root passwd
 if [ -n "$ROOTPASSWD" ]; then
 chroot . <<- EOF
 echo root:$ROOTPASSWD | chpasswd
@@ -130,8 +130,7 @@ sed -i 's/PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 EOF
 fi
 
-
-# python
+# install python
 if [ -n "$PYTHON" ]; then
 chroot . <<- EOF
 apt-get -y install python2.7
@@ -139,10 +138,9 @@ ln -s /usr/bin/python2.7 /usr/bin/python
 EOF
 fi
 
-
 # unmount everythiing
 for i in /proc /sys /dev; do umount .$i; done
-cd ..
+popd
 umount mnt
 losetup -D
 
