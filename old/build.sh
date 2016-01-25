@@ -41,6 +41,7 @@ mkfs.ext4 /dev/loop1 || exit
 UUID=$( blkid -p -s UUID  /dev/loop1 | sed 's/.*="\([^"]*\).*/\1/' )
 
 
+# rm -rf mnt && mkdir mnt || exit
 [ -d mnt ] || mkdir mnt
 mount /dev/loop1 mnt || exit
 ls mnt
