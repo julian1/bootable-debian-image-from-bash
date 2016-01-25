@@ -17,7 +17,7 @@ KERNEL_VERSION='4.3.0-1-amd64'
 # TODO Need to generalize across hardware...
 INTERFACE=enp3s0
 # Install minimal python, used for ansible provisioning etc
-PYTHON=false
+# PYTHON=true
 
 # TODO
 # - Support more than one kernel?
@@ -63,7 +63,7 @@ cp -rp $DIST_VERSION/* mnt || exit
 cd mnt
 for i in /proc /sys /dev; do mount -B $i .$i; done || exit
 
-# install kernel, boot config, ssh
+# install kernel and boot config
 chroot . <<- EOF
 apt-get -y install linux-image-$KERNEL_VERSION
 apt-get -y install syslinux
@@ -71,20 +71,8 @@ apt-get -y install extlinux
 mkdir -p /boot/syslinux
 extlinux --install /boot/syslinux
 dd bs=440 conv=notrunc count=1 if=/usr/lib/syslinux/mbr/mbr.bin of=/dev/loop0
-[ $ROOTPASSWD ] && echo root:$ROOTPASSWD | chpasswd
-apt-get -y install ssh
-mkdir /root/.ssh
-echo $SSHKEYS > /root/.ssh/authorized_keys
-chmod 400 /root/.ssh/authorized_keys
 EOF
 
-# python
-if [ $PYTHON = "true" ]; then
-chroot . <<- EOF
-apt-get -y install python2.7
-ln -s /usr/bin/python2.7 /usr/bin/python
-EOF
-fi
 
 # grab filesystem uuid
 UUID=$( blkid -p -s UUID  /dev/loop1 | sed 's/.*="\([^"]*\).*/\1/' )
@@ -93,7 +81,7 @@ UUID=$( blkid -p -s UUID  /dev/loop1 | sed 's/.*="\([^"]*\).*/\1/' )
 # want testing 4 kernel as well....
 # syslinux boot configuration
 # the indenting around if/else is needed
-if [ $CONSOLE = "true" ]; then
+if [ -n "$CONSOLE" ]; then
 cat > ./boot/syslinux/syslinux.cfg <<- EOF
 CONSOLE 0
 SERIAL 0 115200 0
@@ -123,8 +111,34 @@ allow-hotplug $INTERFACE
 iface $INTERFACE inet dhcp
 EOF
 
-# allow root ssh
-sed -i 's/PermitRootLogin.*/PermitRootLogin yes/' ./etc/ssh/sshd_config
+
+# root pass
+if [ -n "$ROOTPASSWD" ]; then
+chroot . <<- EOF
+echo root:$ROOTPASSWD | chpasswd
+EOF
+fi
+
+# ssh keys and root login
+if [ -n "$SSHKEYS" ]; then
+chroot . <<- EOF
+apt-get -y install ssh
+mkdir /root/.ssh
+echo $SSHKEYS > /root/.ssh/authorized_keys
+chmod 400 /root/.ssh/authorized_keys
+sed -i 's/PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+EOF
+fi
+
+
+# python
+if [ -n "$PYTHON" ]; then
+chroot . <<- EOF
+apt-get -y install python2.7
+ln -s /usr/bin/python2.7 /usr/bin/python
+EOF
+fi
+
 
 # unmount everythiing
 for i in /proc /sys /dev; do umount .$i; done
