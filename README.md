@@ -1,4 +1,9 @@
 
+### TODO
+
+check if syslinux can automatically find kernel image and ram image without having to 
+set as parameters
+
 ### Create a bootable linux image using only basic shell tools
 
 Uses fdisk, losetup, debootstrap, chroot, syslinux
@@ -11,9 +16,8 @@ sudo ./build.sh
 # Use umount.sh to clean up loop mounts if ./build.sh fails
 ```
 
-### Boot with kvm
+### Boot image using kvm
 ```
-sudo chown $USER fs.img 
 kvm fs.img 
 
 # Using bridge tap with running dhcp service etc
