@@ -19,8 +19,13 @@ INTERFACE=enp3s0
 # Install minimal python, used for ansible provisioning etc
 PYTHON=false
 
+# TODO
+# - Support more than one kernel?
+# - check if syslinux can automatically find kernel image and ram image without having to 
+# set as parameters
+# - use chroot for all fs modifications instead of modifying directly from host?
 
-# Support more than one kernel?
+
 
 ############################
 
