@@ -61,19 +61,21 @@ mkdir -p /boot/syslinux
 extlinux --install /boot/syslinux
 dd bs=440 conv=notrunc count=1 if=/usr/lib/syslinux/mbr/mbr.bin of=/dev/loop0
 [ $ROOTPASSWD ] && echo root:$ROOTPASSWD | chpasswd
-apt-get -y install ssh
-mkdir /root/.ssh
-echo $SSHKEY > /root/.ssh/authorized_keys
-chmod 400 /root/.ssh/authorized_keys
 EOF
 
-# python
-if [ $PYTHON = "true" ]; then
-chroot . <<- EOF
-apt-get -y install python2.7
-ln -s /usr/bin/python2.7 /usr/bin/python
-EOF
-fi
+#apt-get -y install ssh
+#mkdir /root/.ssh
+#echo $SSHKEY > /root/.ssh/authorized_keys
+#chmod 400 /root/.ssh/authorized_keys
+
+#
+## python
+#if [ $PYTHON = "true" ]; then
+#chroot . <<- EOF
+#apt-get -y install python2.7
+#ln -s /usr/bin/python2.7 /usr/bin/python
+#EOF
+#fi
 
 
 # syslinux boot configuration
@@ -86,16 +88,16 @@ SERIAL 0 115200 0
 DEFAULT linux
 LABEL linux
   SAY Now booting the kernel from SYSLINUX...
-  KERNEL ../vmlinuz-3.16.0-4-amd64
-  APPEND rw root=UUID=$UUID initrd=../initrd.img-3.16.0-4-amd64 vga=normal fb=false console=ttyS0,115200n8
+  KERNEL /boot/vmlinuz-3.16.0-4-amd64
+  APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-3.16.0-4-amd64 vga=normal fb=false console=ttyS0,115200n8
 EOF
 else
 cat > ./boot/syslinux/syslinux.cfg <<- EOF
 DEFAULT linux
 LABEL linux
   SAY Now booting the kernel from SYSLINUX...
-  KERNEL ../vmlinuz-3.16.0-4-amd64
-  APPEND rw root=UUID=$UUID initrd=../initrd.img-3.16.0-4-amd64
+  KERNEL /boot/vmlinuz-3.16.0-4-amd64
+  APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-3.16.0-4-amd64
 EOF
 fi
 
