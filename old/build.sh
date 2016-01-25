@@ -37,6 +37,10 @@ losetup -f fs.img -o $((2048 * 512)) /dev/loop1 || exit
 # mount loop device and copy files
 mkfs.ext4 /dev/loop1 || exit
 
+# grab filesystem uuid
+UUID=$( blkid -p -s UUID  /dev/loop1 | sed 's/.*="\([^"]*\).*/\1/' )
+
+
 [ -d mnt ] || mkdir mnt
 mount /dev/loop1 mnt || exit
 ls mnt
@@ -70,8 +74,6 @@ ln -s /usr/bin/python2.7 /usr/bin/python
 EOF
 fi
 
-# grab filesystem uuid
-UUID=$( blkid -p -s UUID  /dev/loop1 | sed 's/.*="\([^"]*\).*/\1/' )
 
 # syslinux boot configuration
 # the indenting around if/else is needed
