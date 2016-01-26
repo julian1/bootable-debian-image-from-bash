@@ -10,6 +10,7 @@ MIRROR=http://mirror.internode.on.net/pub/debian/
 #KERNEL=3.16.0-4-amd64
 DIST=testing
 KERNEL=4.3.0-1-amd64
+INTERFACE=ens3
 PYTHON=no
 
 ############################
@@ -85,8 +86,8 @@ cat > /etc/network/interfaces << EOF2
 auto lo
 iface lo inet loopback
 
-allow-hotplug eth0
-iface eth0 inet dhcp
+allow-hotplug $INTERFACE
+iface $INTERFACE inet dhcp
 EOF2
 
 if [ -n "$ROOTPASSWD" ]; then 
