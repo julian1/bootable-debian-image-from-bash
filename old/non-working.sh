@@ -32,13 +32,13 @@ INTERFACE=enp3s0
 # TODO
 
 # - output filename
-# - change mnt working dir name to tmp
+# - change mnt working dir name to tmp - maybe... would have to change mount.sh
 # - control debootstrap local cache with a flag...
 # - caching will break if interupted - so place a flag/marker file if succeeded
 # - be good to install generic kernel then extract kernel version automatically using uname or lsb_release...
 # - support for multiple kernels at boot?
 # - check if syslinux can automatically find kernel image and ram image without having to 
-# set as parameters
+# set as parameters - no
 # - use chroot for all fs modifications instead of modifying directly from host?
 
 
