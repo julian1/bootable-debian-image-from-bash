@@ -6,9 +6,11 @@ ROOTPASSWD=root
 FSSIZE=1G
 # CONSOLE=false
 MIRROR=http://mirror.internode.on.net/pub/debian/
-DIST=jessie
-KERNEL=3.16.0-4-amd64
-PYTHON=yes
+#DIST=jessie
+#KERNEL=3.16.0-4-amd64
+DIST=testing
+KERNEL=4.3.0-1-amd64
+PYTHON=no
 
 ############################
 
