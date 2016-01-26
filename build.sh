@@ -64,10 +64,17 @@ mkdir -p /boot/syslinux
 extlinux --install /boot/syslinux
 dd bs=440 conv=notrunc count=1 if=/usr/lib/syslinux/mbr/mbr.bin of=/dev/loop0
 
+cp /usr/lib/syslinux/modules/bios/menu.c32     /boot/syslinux/
+cp /usr/lib/syslinux/modules/bios/libutil.c32  /boot/syslinux/
+cp /usr/lib/syslinux/modules/bios/libcom32.c32 /boot/syslinux/
+
+# DEFAULT linux
+
 cat > /boot/syslinux/syslinux.cfg <<- EOF2
 CONSOLE 0
 SERIAL 0 115200 0
-DEFAULT linux
+DEFAULT menu.c32
+PROMPT 0
 LABEL linux
   SAY Now booting the kernel from SYSLINUX...
   KERNEL /boot/vmlinuz-$KERNEL
