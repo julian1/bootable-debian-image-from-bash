@@ -1,7 +1,7 @@
 #!/bin/bash -x
 
 # Editable configuration!
-SSHKEY="$(cat /home/meteo/.ssh/id_rsa.pub)"
+SSHKEY="$(cat /home/$USER/.ssh/id_rsa.pub)"
 ROOTPASSWD=root
 FSSIZE=1G
 # CONSOLE or VGA
@@ -40,7 +40,6 @@ mkfs.ext4 /dev/loop1 || exit
 # grab filesystem uuid
 UUID=$( blkid -p -s UUID  /dev/loop1 | sed 's/.*="\([^"]*\).*/\1/' )
 
-
 rm -rf mnt && mkdir mnt || exit
 mount /dev/loop1 mnt || exit
 
@@ -50,9 +49,11 @@ cp -rp jessie/* mnt || exit
 pushd mnt
 for i in /proc /sys /dev; do mount -B $i .$i; done || exit
 
+VERSION=3.16.0-4-amd64
+
 # install kernel, boot config, ssh
 chroot . <<- EOF
-apt-get -y install linux-image-3.16.0-4-amd64
+apt-get -y install linux-image-$VERSION
 apt-get -y install syslinux
 apt-get -y install extlinux
 mkdir -p /boot/syslinux
@@ -63,8 +64,8 @@ cat > /boot/syslinux/syslinux.cfg <<- EOF2
 DEFAULT linux
 LABEL linux
   SAY Now booting the kernel from SYSLINUX...
-  KERNEL /boot/vmlinuz-3.16.0-4-amd64
-  APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-3.16.0-4-amd64
+  KERNEL /boot/vmlinuz-$VERSION
+  APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-$VERSION
 EOF2
 
 cat > /etc/network/interfaces << EOF2
@@ -82,37 +83,9 @@ mkdir /root/.ssh
 echo $SSHKEY > /root/.ssh/authorized_keys
 chmod 400 /root/.ssh/authorized_keys
 sed -i 's/PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
-
 EOF
 
-#apt-get -y install ssh
-#mkdir /root/.ssh
-#echo $SSHKEY > /root/.ssh/authorized_keys
-#chmod 400 /root/.ssh/authorized_keys
-
-#
-## python
-#if [ $PYTHON = "true" ]; then
-#chroot . <<- EOF
-#apt-get -y install python2.7
-#ln -s /usr/bin/python2.7 /usr/bin/python
-#EOF
-#fi
-
-
-## network interfaces
-#cat > ./etc/network/interfaces << EOF
-#auto lo
-#iface lo inet loopback
-#
-#allow-hotplug eth0
-#iface eth0 inet dhcp
-#EOF
-
-# allow root ssh
-# sed -i 's/PermitRootLogin.*/PermitRootLogin yes/' ./etc/ssh/sshd_config
-
-# unmount everythiing
+# unmount everything
 for i in /proc /sys /dev; do umount .$i; done
 popd
 umount mnt
@@ -122,7 +95,7 @@ rmdir mnt
 chmod 666 fs.img
 
 
-# also make a virtualbox image if we can
+# make a virtualbox image if we can
 # rm fs.vdi
 # which VBoxManage && VBoxManage convertfromraw --format VDI fs.img fs.vdi && chmod 666 fs.vdi
 
