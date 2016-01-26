@@ -58,7 +58,17 @@ apt-get -y install extlinux
 mkdir -p /boot/syslinux
 extlinux --install /boot/syslinux
 dd bs=440 conv=notrunc count=1 if=/usr/lib/syslinux/mbr/mbr.bin of=/dev/loop0
+
+cat > /boot/syslinux/syslinux.cfg <<- EOF2
+DEFAULT linux
+LABEL linux
+  SAY Now booting the kernel from SYSLINUX...
+  KERNEL /boot/vmlinuz-3.16.0-4-amd64
+  APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-3.16.0-4-amd64
+EOF2
+
 [ $ROOTPASSWD ] && echo root:$ROOTPASSWD | chpasswd
+
 EOF
 
 #apt-get -y install ssh
@@ -75,29 +85,6 @@ EOF
 #EOF
 #fi
 
-
-# syslinux boot configuration
-# the indenting around if/else is needed
-if [ $CONSOLE = "true" ]; then
-cat > ./boot/syslinux/syslinux.cfg <<- EOF
-CONSOLE 0
-SERIAL 0 115200 0
-
-DEFAULT linux
-LABEL linux
-  SAY Now booting the kernel from SYSLINUX...
-  KERNEL /boot/vmlinuz-3.16.0-4-amd64
-  APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-3.16.0-4-amd64 vga=normal fb=false console=ttyS0,115200n8
-EOF
-else
-cat > ./boot/syslinux/syslinux.cfg <<- EOF
-DEFAULT linux
-LABEL linux
-  SAY Now booting the kernel from SYSLINUX...
-  KERNEL /boot/vmlinuz-3.16.0-4-amd64
-  APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-3.16.0-4-amd64
-EOF
-fi
 
 # network interfaces
 cat > ./etc/network/interfaces << EOF
@@ -116,6 +103,12 @@ for i in /proc /sys /dev; do umount .$i; done
 popd
 umount mnt
 losetup -D
+
+rmdir mnt
+
+chmod 666 fs.img
+
+
 
 # also make a virtualbox image if we can
 # rm fs.vdi
