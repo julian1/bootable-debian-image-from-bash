@@ -27,9 +27,9 @@ kvm fs.img -nographic
 
 ### Boot with kvm with bridge tap with running dhcp service etc
 ```
-sudo kvm fs.img -net nic -net tap,ifname=mybr0
+sudo kvm fs.img -nographic -net nic -net tap,ifname=mybr0
 
-# can now ssh 10.1.1.20
+# can now ssh root@10.1.1.20
 ```
 
 
