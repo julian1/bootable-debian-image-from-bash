@@ -13,14 +13,25 @@ sudo ./build.sh 2>&1 | tee log.txt
 # Use umount.sh to clean up loop mounts if ./build.sh fails
 ```
 
-### Boot image using kvm
+### Boot with kvm
 ```
 kvm fs.img 
-
-# Using bridge tap with running dhcp service etc
-sudo kvm fs.img -net nic -net tap,ifname=mybr0
-ssh 10.1.1.20
 ```
+
+### Boot with kvm and attach and redirect serial output 
+```
+kvm fs.img -nographic
+
+# (login and shutdown to restore shell)
+```
+
+### Boot with kvm with bridge tap with running dhcp service etc
+```
+sudo kvm fs.img -net nic -net tap,ifname=mybr0
+
+# can now ssh 10.1.1.20
+```
+
 
 ### Postinstall
 

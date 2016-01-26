@@ -65,11 +65,13 @@ extlinux --install /boot/syslinux
 dd bs=440 conv=notrunc count=1 if=/usr/lib/syslinux/mbr/mbr.bin of=/dev/loop0
 
 cat > /boot/syslinux/syslinux.cfg <<- EOF2
+CONSOLE 0
+SERIAL 0 115200 0
 DEFAULT linux
 LABEL linux
   SAY Now booting the kernel from SYSLINUX...
   KERNEL /boot/vmlinuz-$KERNEL
-  APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-$KERNEL
+  APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-$KERNEL vga=normal fb=false console=ttyS0,115200n8
 EOF2
 
 cat > /etc/network/interfaces << EOF2
