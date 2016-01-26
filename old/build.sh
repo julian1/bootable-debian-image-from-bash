@@ -2,7 +2,7 @@
 
 # Editable configuration!
 SSHKEY="$(cat /home/meteo/.ssh/id_rsa.pub)"
-# ROOTPASSWD=root
+ROOTPASSWD=root
 FSSIZE=1G
 # CONSOLE or VGA
 CONSOLE=false
@@ -41,15 +41,13 @@ mkfs.ext4 /dev/loop1 || exit
 UUID=$( blkid -p -s UUID  /dev/loop1 | sed 's/.*="\([^"]*\).*/\1/' )
 
 
-# rm -rf mnt && mkdir mnt || exit
-[ -d mnt ] || mkdir mnt
+rm -rf mnt && mkdir mnt || exit
 mount /dev/loop1 mnt || exit
-ls mnt
 
 cp -rp jessie/* mnt || exit
 
 # mount systems and chroot
-cd mnt
+pushd mnt
 for i in /proc /sys /dev; do mount -B $i .$i; done || exit
 
 # install kernel, boot config, ssh
@@ -115,7 +113,7 @@ sed -i 's/PermitRootLogin.*/PermitRootLogin yes/' ./etc/ssh/sshd_config
 
 # unmount everythiing
 for i in /proc /sys /dev; do umount .$i; done
-cd ..
+popd
 umount mnt
 losetup -D
 
