@@ -22,7 +22,13 @@ sudo kvm fs.img -net nic -net tap,ifname=mybr0
 ssh 10.1.1.20
 ```
 
-### Copy to a thumbdrive
+### Postinstall
+
+Edit, dhcp interface in /etc/network/interfaces if kernel uses
+non-predictable udev assignment
+
+
+### Image thumbdrive
 ```
 # if thumb is /dev/sdb
 sudo dd if=fs.img of=/dev/sdb bs=1M
