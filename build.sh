@@ -1,18 +1,19 @@
 #!/bin/bash -x
 
 # Configuration!
-SSHKEY="$(cat /home/$USER/.ssh/id_rsa.pub)"
+SSHKEY="$(cat ~/.ssh/authorized_keys)"
 ROOTPASSWD=root
 FSSIZE=1G
 # CONSOLE=false
 MIRROR=http://mirror.internode.on.net/pub/debian/
+DIST=jessie
 KERNEL=3.16.0-4-amd64
 PYTHON=yes
 
 ############################
 
 # cache bootstrap files locally
-[ ! -d jessie ] && debootstrap jessie jessie/ $MIRROR
+[ ! -d $DIST ] && debootstrap $DIST $DIST/ $MIRROR
 
 # create image
 rm fs.img
@@ -41,7 +42,7 @@ UUID=$( blkid -p -s UUID  /dev/loop1 | sed 's/.*="\([^"]*\).*/\1/' )
 rm -rf mnt && mkdir mnt || exit
 mount /dev/loop1 mnt || exit
 
-cp -rp jessie/* mnt || exit
+cp -rp $DIST/* mnt || exit
 
 # mount systems and chroot
 pushd mnt
@@ -84,7 +85,7 @@ fi
 if [ -n "$SSHKEY" ]; then
   apt-get -y install ssh
   mkdir /root/.ssh
-  echo $SSHKEY > /root/.ssh/authorized_keys
+  echo "$SSHKEY" > /root/.ssh/authorized_keys
   chmod 400 /root/.ssh/authorized_keys
   sed -i 's/PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 fi
@@ -93,7 +94,6 @@ if [ $PYTHON = "yes" ]; then
   apt-get -y install python2.7
   ln -s /usr/bin/python2.7 /usr/bin/python
 fi
-
 EOF
 
 # unmount everything
@@ -104,7 +104,6 @@ losetup -D
 rmdir mnt
 
 chmod 666 fs.img
-
 
 # make a virtualbox image if we can
 # rm fs.vdi
