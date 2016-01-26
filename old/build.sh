@@ -67,7 +67,21 @@ LABEL linux
   APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-3.16.0-4-amd64
 EOF2
 
+cat > /etc/network/interfaces << EOF2
+auto lo
+iface lo inet loopback
+
+allow-hotplug eth0
+iface eth0 inet dhcp
+EOF2
+
 [ $ROOTPASSWD ] && echo root:$ROOTPASSWD | chpasswd
+
+apt-get -y install ssh
+mkdir /root/.ssh
+echo $SSHKEY > /root/.ssh/authorized_keys
+chmod 400 /root/.ssh/authorized_keys
+sed -i 's/PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 EOF
 
@@ -86,28 +100,26 @@ EOF
 #fi
 
 
-# network interfaces
-cat > ./etc/network/interfaces << EOF
-auto lo
-iface lo inet loopback
-
-allow-hotplug eth0
-iface eth0 inet dhcp
-EOF
+## network interfaces
+#cat > ./etc/network/interfaces << EOF
+#auto lo
+#iface lo inet loopback
+#
+#allow-hotplug eth0
+#iface eth0 inet dhcp
+#EOF
 
 # allow root ssh
-sed -i 's/PermitRootLogin.*/PermitRootLogin yes/' ./etc/ssh/sshd_config
+# sed -i 's/PermitRootLogin.*/PermitRootLogin yes/' ./etc/ssh/sshd_config
 
 # unmount everythiing
 for i in /proc /sys /dev; do umount .$i; done
 popd
 umount mnt
 losetup -D
-
 rmdir mnt
 
 chmod 666 fs.img
-
 
 
 # also make a virtualbox image if we can
