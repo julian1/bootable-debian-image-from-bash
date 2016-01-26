@@ -1,15 +1,14 @@
 #!/bin/bash -x
 
-# Editable configuration!
+# Configuration!
 SSHKEY="$(cat /home/$USER/.ssh/id_rsa.pub)"
 ROOTPASSWD=root
 FSSIZE=1G
 # CONSOLE or VGA
-CONSOLE=false
-# install minimal python, useful for ansible etc
-PYTHON=false
-# Mirror to use
+# CONSOLE=false
 MIRROR=http://mirror.internode.on.net/pub/debian/
+VERSION=3.16.0-4-amd64
+PYTHON=yes
 
 ############################
 
@@ -49,7 +48,8 @@ cp -rp jessie/* mnt || exit
 pushd mnt
 for i in /proc /sys /dev; do mount -B $i .$i; done || exit
 
-VERSION=3.16.0-4-amd64
+#CONSOLE 0
+#SERIAL 0 115200 0
 
 # install kernel, boot config, ssh
 chroot . <<- EOF
@@ -83,6 +83,10 @@ mkdir /root/.ssh
 echo $SSHKEY > /root/.ssh/authorized_keys
 chmod 400 /root/.ssh/authorized_keys
 sed -i 's/PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+[ $PYTHON = "yes" ] && apt-get -y install python2.7 \
+  && ln -s /usr/bin/python2.7 /usr/bin/python
+
 EOF
 
 # unmount everything
