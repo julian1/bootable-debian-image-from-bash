@@ -45,4 +45,8 @@ non-predictable udev assignment
 sudo dd if=fs.img of=/dev/sdb bs=1M
 ```
 
+#### TODO
+```
+zfs - on initrd - non encrypted
 
+```
