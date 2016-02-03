@@ -1,5 +1,5 @@
 
-#### Creates a bootable linux image using only basic shell tools
+### Creates a bootable linux image using only basic shell tools
 
 Uses fdisk, losetup, debootstrap, chroot, syslinux
 
@@ -9,7 +9,7 @@ Uses fdisk, losetup, debootstrap, chroot, syslinux
 sudo ./build.sh 2>&1 | tee log.txt
 ```
 
-#### Boot with kvm redirecting serial output
+#### Boot image with kvm and redirect console to stdout
 ```
 sudo ./start.sh ./resources/fs.img
 ```
@@ -19,9 +19,9 @@ sudo ./start.sh ./resources/fs.img
 sudo /etc/qemu-ifdown mybr0
 ```
 
-#### Image thumbdrive
+#### Create rescue thumbdrive
 ```
-# if thumb is /dev/sdb
+# if thumbdrive is /dev/sdb,
 sudo dd if=fs.img of=/dev/sdb bs=1M
 ```
 
@@ -29,5 +29,4 @@ sudo dd if=fs.img of=/dev/sdb bs=1M
 ```
 try zfs - on initrd - non encrypted
 figure out bridge tap without root permissions
-
 ```
