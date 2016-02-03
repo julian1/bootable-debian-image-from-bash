@@ -32,6 +32,10 @@ sudo kvm fs.img -nographic -net nic -net tap,ifname=mybr0
 # can now ssh root@10.1.1.20
 ```
 
+### Reset kvm bridge
+```
+sudo /etc/qemu-ifdown mybr0
+```
 
 ### Postinstall
 

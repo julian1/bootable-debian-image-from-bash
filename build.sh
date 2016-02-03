@@ -15,6 +15,9 @@ PYTHON=no
 
 ############################
 
+[ -d resources ] || mkdir resources
+pushd resources
+
 # cache bootstrap files locally
 [ ! -d $DIST ] && debootstrap $DIST $DIST/ $MIRROR
 
@@ -53,7 +56,7 @@ for i in /proc /sys /dev; do mount -B $i .$i; done || exit
 
 # CONSOLE 0
 # SERIAL 0 115200 0
-# APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-$KERNEL acpi=off 
+# APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-$KERNEL acpi=off
 # APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-$KERNEL vga=normal fb=false console=ttyS0,115200n8
 
 # install kernel, boot config, ssh
@@ -70,11 +73,12 @@ cp /usr/lib/syslinux/modules/bios/libutil.c32  /boot/syslinux/
 cp /usr/lib/syslinux/modules/bios/libcom32.c32 /boot/syslinux/
 
 # DEFAULT linux
+# DEFAULT menu.c32
 
 cat > /boot/syslinux/syslinux.cfg <<- EOF2
 CONSOLE 0
 SERIAL 0 115200 0
-DEFAULT menu.c32
+DEFAULT linux
 PROMPT 0
 LABEL linux
   SAY Now booting the kernel from SYSLINUX...
@@ -90,7 +94,7 @@ allow-hotplug $INTERFACE
 iface $INTERFACE inet dhcp
 EOF2
 
-if [ -n "$ROOTPASSWD" ]; then 
+if [ -n "$ROOTPASSWD" ]; then
   echo root:$ROOTPASSWD | chpasswd
 fi
 
@@ -102,7 +106,7 @@ if [ -n "$SSHKEY" ]; then
   sed -i 's/PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 fi
 
-if [ $PYTHON = "yes" ]; then 
+if [ $PYTHON = "yes" ]; then
   apt-get -y install python2.7
   ln -s /usr/bin/python2.7 /usr/bin/python
 fi
@@ -120,4 +124,7 @@ chmod 666 fs.img
 # make a virtualbox image if we can
 # rm fs.vdi
 # which VBoxManage && VBoxManage convertfromraw --format VDI fs.img fs.vdi && chmod 666 fs.vdi
+
+
+popd # resources
 
