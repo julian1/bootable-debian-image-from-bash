@@ -4,7 +4,5 @@
 *.swm
 *.byte
 *.native
-jessie
-testing
 *.img
-
+resources

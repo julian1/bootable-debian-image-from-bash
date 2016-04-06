@@ -21,7 +21,10 @@ aptitude search linux-image
 
 #### Boot image with kvm and redirect console to stdout
 ```
-sudo ./start.sh ./resources/fs.img
+kvm ./resources/precise-3.2.0-23-virtual.img -nographic
+
+# login root,root
+/sbin/shutdown -h now
 ```
 
 #### Reset kvm bridge tap

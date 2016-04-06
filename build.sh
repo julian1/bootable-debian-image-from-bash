@@ -76,21 +76,17 @@ for i in /proc /sys /dev; do mount -B $i .$i; done || exit
 # install kernel, boot config, ssh
 chroot . <<- EOF
 
-# universe is needed for extlinux
+# the extlinux package comes from the universe repo in ubuntu/precise
 cat > /etc/apt/sources.list <<- EOF2
 deb http://mirror.internode.on.net/pub/ubuntu/ubuntu/ precise main
-deb http://mirror.internode.on.net/pub/ubuntu/ubuntu/ precise universe 
+deb http://mirror.internode.on.net/pub/ubuntu/ubuntu/ precise universe
 EOF2
 
 # Ubuntu keys
 apt-key update
 apt-get update
 
-# aptitude
-# apt-get -y install aptitude
-# search kernels
-# aptitude search linux-image
-
+# Install kernel
 apt-get -y install linux-image-$KERNEL
 
 # http://shallowsky.com/linux/extlinux.html
@@ -99,15 +95,14 @@ apt-get -y install extlinux
 mkdir -p /boot/syslinux
 extlinux --install /boot/syslinux
 
-# fix if grub tried to overwrite the mbr
+# Note, precise will prompt about grub, considered a bug, and workaround is too complicated.
+# http://askubuntu.com/questions/146921/how-do-i-apt-get-y-dist-upgrade-without-a-grub-config-prompt
+
+# fix mbr in case grub tried to overwrite it
 dd bs=440 conv=notrunc count=1 if=/usr/lib/syslinux/mbr.bin of=/dev/loop0
 
-# cp $(find /usr/lib/syslinux/ -name menu.c32)     /boot/syslinux/
-# cp $(find /usr/lib/syslinux/ -name libutil.c32)  /boot/syslinux/   # not precise
-# cp $(find /usr/lib/syslinux/ -name libcom32.c32) /boot/syslinux/   # not precise
-# DEFAULT linux
-# DEFAULT menu.c32
 
+# ext/syslinux boot config
 cat > /boot/syslinux/syslinux.cfg <<- EOF2
 CONSOLE 0
 SERIAL 0 115200 0
@@ -118,6 +113,23 @@ LABEL linux
   KERNEL /boot/vmlinuz-$KERNEL
   APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-$KERNEL vga=normal fb=false console=ttyS0,115200n8
 EOF2
+
+
+# spawn shell on console
+# http://www.jaredlog.com/?p=1484
+cat > /etc/init/ttyS0.conf <<- EOF2
+start on stopped rc RUNLEVEL=[2345] and (
+            not-container or
+            container CONTAINER=lxc or
+            container CONTAINER=lxc-libvirt)
+
+stop on runlevel [!2345]
+
+respawn
+exec /sbin/getty -8 115200 ttyS0
+EOF2
+
+
 
 cat > /etc/network/interfaces << EOF2
 auto lo
@@ -154,10 +166,15 @@ rmdir mnt
 
 chmod 666 fs.img
 
+# leave fs.img where it is, so that can use remount easily with mount.sh
+cp fs.img "$DIST-$KERNEL.img"
+chmod 666 "$DIST-$KERNEL.img"
+
+# Could neat to make a COW image as well?
+
 # make a virtualbox image if we can
 # rm fs.vdi
 # which VBoxManage && VBoxManage convertfromraw --format VDI fs.img fs.vdi && chmod 666 fs.vdi
-
 
 popd # resources
 
