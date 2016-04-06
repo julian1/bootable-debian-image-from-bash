@@ -9,6 +9,16 @@ Uses fdisk, losetup, debootstrap, chroot, syslinux
 sudo ./build.sh 2>&1 | tee log.txt
 ```
 
+#### Mount and do a change root to search
+```
+sudo ./mount.sh
+sudo chroot resources/mnt/
+
+# look for appropriate kernel to install
+apt-get -y install aptitude
+aptitude search linux-image
+```
+
 #### Boot image with kvm and redirect console to stdout
 ```
 sudo ./start.sh ./resources/fs.img
