@@ -5,12 +5,25 @@ SSHKEY="$(cat ~/.ssh/authorized_keys)"
 ROOTPASSWD=root
 FSSIZE=1G
 # CONSOLE=false
-MIRROR=http://mirror.internode.on.net/pub/debian/
-#DIST=jessie
-#KERNEL=3.16.0-4-amd64
-DIST=testing
-KERNEL=4.3.0-1-amd64
-INTERFACE=ens3
+
+#MIRROR=http://mirror.internode.on.net/pub/debian/
+# DIST=jessie
+#KERNEL=4.3.0-1-amd64
+# INTERFACE=ens3
+
+# Precise
+#MIRROR=http://archive.ubuntu.com/ubuntu/
+MIRROR=http://mirror.internode.on.net/pub/ubuntu/ubuntu/
+DIST=precise
+KERNEL=3.2.0-23-virtual
+INTERFACE=eth0
+CONSOLE=true
+
+
+# KERNEL=3.13.0-68-generic
+# 3.16.0-4-amd64
+# linux-image-3.13.0-68-generic
+
 PYTHON=no
 
 ############################
@@ -39,6 +52,7 @@ EOF
 losetup -f fs.img /dev/loop0 || exit
 losetup -f fs.img -o $((2048 * 512)) /dev/loop1 || exit
 
+
 # mount loop device and copy files
 mkfs.ext4 /dev/loop1 || exit
 
@@ -61,17 +75,36 @@ for i in /proc /sys /dev; do mount -B $i .$i; done || exit
 
 # install kernel, boot config, ssh
 chroot . <<- EOF
+
+# universe is needed for extlinux
+cat > /etc/apt/sources.list <<- EOF2
+deb http://mirror.internode.on.net/pub/ubuntu/ubuntu/ precise main
+deb http://mirror.internode.on.net/pub/ubuntu/ubuntu/ precise universe 
+EOF2
+
+# Ubuntu keys
+apt-key update
+apt-get update
+
+
+# aptitude
+# apt-get -y install aptitude
+# search kernels
+# aptitude search linux-image
+
+
 apt-get -y install linux-image-$KERNEL
 apt-get -y install syslinux
 apt-get -y install extlinux
 mkdir -p /boot/syslinux
 extlinux --install /boot/syslinux
-dd bs=440 conv=notrunc count=1 if=/usr/lib/syslinux/mbr/mbr.bin of=/dev/loop0
 
-cp /usr/lib/syslinux/modules/bios/menu.c32     /boot/syslinux/
-cp /usr/lib/syslinux/modules/bios/libutil.c32  /boot/syslinux/
-cp /usr/lib/syslinux/modules/bios/libcom32.c32 /boot/syslinux/
+# find doesn't work.
+dd bs=440 conv=notrunc count=1 if=/usr/lib/syslinux/mbr.bin of=/dev/loop0
 
+# cp $(find /usr/lib/syslinux/ -name menu.c32)     /boot/syslinux/
+# cp $(find /usr/lib/syslinux/ -name libutil.c32)  /boot/syslinux/   # not precise
+# cp $(find /usr/lib/syslinux/ -name libcom32.c32) /boot/syslinux/   # not precise
 # DEFAULT linux
 # DEFAULT menu.c32
 
