@@ -4,7 +4,6 @@
 SSHKEY="$(cat ~/.ssh/authorized_keys)"
 ROOTPASSWD=root
 FSSIZE=1G
-# CONSOLE=false
 
 #MIRROR=http://mirror.internode.on.net/pub/debian/
 # DIST=jessie
@@ -18,11 +17,6 @@ DIST=precise
 KERNEL=3.2.0-23-virtual
 INTERFACE=eth0
 CONSOLE=true
-
-
-# KERNEL=3.13.0-68-generic
-# 3.16.0-4-amd64
-# linux-image-3.13.0-68-generic
 
 PYTHON=no
 
@@ -73,7 +67,9 @@ for i in /proc /sys /dev; do mount -B $i .$i; done || exit
 # APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-$KERNEL acpi=off
 # APPEND rw root=UUID=$UUID initrd=/boot/initrd.img-$KERNEL vga=normal fb=false console=ttyS0,115200n8
 
-# install kernel, boot config, ssh
+############################
+
+# install kernel, boot config, ssh etc
 chroot . <<- EOF
 
 # the extlinux package comes from the universe repo in ubuntu/precise
@@ -89,6 +85,7 @@ apt-get update
 # Install kernel
 apt-get -y install linux-image-$KERNEL
 
+# Install ext/syslinux
 # http://shallowsky.com/linux/extlinux.html
 apt-get -y install syslinux
 apt-get -y install extlinux
@@ -130,7 +127,7 @@ exec /sbin/getty -8 115200 ttyS0
 EOF2
 
 
-
+# set up network
 cat > /etc/network/interfaces << EOF2
 auto lo
 iface lo inet loopback
@@ -139,10 +136,12 @@ allow-hotplug $INTERFACE
 iface $INTERFACE inet dhcp
 EOF2
 
+# root passwd
 if [ -n "$ROOTPASSWD" ]; then
   echo root:$ROOTPASSWD | chpasswd
 fi
 
+# ssh keys
 if [ -n "$SSHKEY" ]; then
   apt-get -y install ssh
   mkdir /root/.ssh
@@ -151,11 +150,14 @@ if [ -n "$SSHKEY" ]; then
   sed -i 's/PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 fi
 
+# python
 if [ $PYTHON = "yes" ]; then
   apt-get -y install python2.7
   ln -s /usr/bin/python2.7 /usr/bin/python
 fi
 EOF
+
+############################
 
 # unmount everything
 for i in /proc /sys /dev; do umount .$i; done
