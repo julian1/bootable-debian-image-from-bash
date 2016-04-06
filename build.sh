@@ -86,20 +86,20 @@ EOF2
 apt-key update
 apt-get update
 
-
 # aptitude
 # apt-get -y install aptitude
 # search kernels
 # aptitude search linux-image
 
-
 apt-get -y install linux-image-$KERNEL
+
+# http://shallowsky.com/linux/extlinux.html
 apt-get -y install syslinux
 apt-get -y install extlinux
 mkdir -p /boot/syslinux
 extlinux --install /boot/syslinux
 
-# find doesn't work.
+# fix if grub tried to overwrite the mbr
 dd bs=440 conv=notrunc count=1 if=/usr/lib/syslinux/mbr.bin of=/dev/loop0
 
 # cp $(find /usr/lib/syslinux/ -name menu.c32)     /boot/syslinux/
