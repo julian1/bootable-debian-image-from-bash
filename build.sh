@@ -114,6 +114,7 @@ EOF2
 
 # spawn shell on console
 # http://www.jaredlog.com/?p=1484
+# https://help.ubuntu.com/community/KVM/Access
 cat > /etc/init/ttyS0.conf <<- EOF2
 start on stopped rc RUNLEVEL=[2345] and (
             not-container or
@@ -123,7 +124,7 @@ start on stopped rc RUNLEVEL=[2345] and (
 stop on runlevel [!2345]
 
 respawn
-exec /sbin/getty -8 115200 ttyS0
+exec /sbin/getty -8 115200 ttyS0 xterm
 EOF2
 
 
