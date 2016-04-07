@@ -4,7 +4,7 @@ NAME=$1
 
 PID=$$
 
-MAC='00:01:04:1b:2C:1B'
+MAC='00:01:04:1b:2C:2A'
 
 qemu-system-x86_64 \
   -enable-kvm \
