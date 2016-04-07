@@ -27,6 +27,10 @@ kvm ./resources/precise-3.2.0-23-virtual.img -nographic
 /sbin/shutdown -h now
 ```
 
+#### Boot with net tap
+./start ./resources/precise-3.2.0-23-virtual.img
+
+
 #### Reset kvm bridge tap
 ```
 sudo /etc/qemu-ifdown mybr0
