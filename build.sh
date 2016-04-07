@@ -85,22 +85,32 @@ apt-get update
 # Install kernel
 apt-get -y install linux-image-$KERNEL
 
-# Install ext/syslinux
-# http://shallowsky.com/linux/extlinux.html
-apt-get -y install syslinux
-apt-get -y install extlinux
-mkdir -p /boot/syslinux
-extlinux --install /boot/syslinux
-
-# Note, precise will prompt about grub, considered a bug, and workaround is too complicated.
-# http://askubuntu.com/questions/146921/how-do-i-apt-get-y-dist-upgrade-without-a-grub-config-prompt
-
 # fix mbr in case grub tried to overwrite it
 dd bs=440 conv=notrunc count=1 if=/usr/lib/syslinux/mbr.bin of=/dev/loop0
 
 
+# Install ext/syslinux
+# http://shallowsky.com/linux/extlinux.html
+# apt-get -y install syslinux
+
+# deleted this
+#apt-get -y install extlinux
+#mkdir -p /boot/syslinux
+#extlinux --install /boot/syslinux
+
+
+apt-get -y install extlinux
+extlinux --install /boot/
+
+
+# Note, precise will prompt about grub, considered a bug, and workaround is too complicated.
+# http://askubuntu.com/questions/146921/how-do-i-apt-get-y-dist-upgrade-without-a-grub-config-prompt
+
+
+# cat > /boot/syslinux/syslinux.cfg <<- EOF2
 # ext/syslinux boot config
-cat > /boot/syslinux/syslinux.cfg <<- EOF2
+
+cat > /boot/extlinux/extlinux.conf <<- EOF2
 CONSOLE 0
 SERIAL 0 115200 0
 DEFAULT linux
@@ -170,8 +180,8 @@ rmdir mnt
 chmod 666 fs.img
 
 # leave fs.img where it is, so that can use remount easily with mount.sh
-cp fs.img "$DIST-$KERNEL.img"
-chmod 666 "$DIST-$KERNEL.img"
+#cp fs.img "$DIST-$KERNEL.img"
+#chmod 666 "$DIST-$KERNEL.img"
 
 # Could neat to make a COW image as well?
 
