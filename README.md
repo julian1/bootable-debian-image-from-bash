@@ -14,4 +14,7 @@ Simple example code using, fdisk, losetup, debootstrap, chroot, syslinux
 ./tools/start-kvm.sh ./build/stretch-4.9.0-4-amd64.img
 ```
 
+#### TODO
+
+- integrate qcow
 
