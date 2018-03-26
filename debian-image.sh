@@ -4,6 +4,7 @@
 ############################
 # Configuration!
 
+# if [ -z "$KEYS" ]; then...
 KEYS="$(cat /home/meteo/.ssh/authorized_keys)"
 # DANGEROUS - edit me!
 ROOTPASSWD=root
@@ -11,7 +12,7 @@ FSSIZE=1G
 # MIRROR=http://mirror.internode.on.net/pub/debian/
 MIRROR=http://ftp.us.debian.org/debian/
 DIST=stretch
-KERNEL=4.9.0-4-amd64
+KERNEL=4.9.0-6-amd64
 PYTHON=yes
 
 # Jessie
@@ -48,9 +49,16 @@ fi
 
 set -x
 
-cache="./build/$DIST-cache"
+# fail fast
+set -e
+
+[ -d ./cache ] || mkdir ./cache
+[ -d ./build ] || mkdir ./build
+
+cache="./cache/$DIST"
 target="./build/$DIST-$KERNEL.img"
-mnt="./build/mnt"
+mnt="./mnt"
+
 
 
 # delete stale cache. eg. 1 day.
@@ -67,18 +75,18 @@ fi
 
 
 # download bootstrap files locally. note use || exit
-[ ! -d "$cache" ] && debootstrap "$DIST" "$cache/" $MIRROR
+[ -d "$cache" ] || debootstrap "$DIST" "$cache/" $MIRROR
 
 
 ############################
 # create image
 
-rm $target
-rm -rf "$mnt"
-mkdir "$mnt" || exit
+rm $target  || true
+rm -rf "$mnt" || true
+mkdir "$mnt"
 
 # image
-dd if=/dev/zero of=$target bs=$FSSIZE count=1 || exit
+dd if=/dev/zero of=$target bs=$FSSIZE count=1
 
 chmod 666 $target
 
@@ -98,8 +106,10 @@ EOF
 ############################
 # initial filesystem
 
-resources_cleanup () {
-  # cleanup see, https://stackoverflow.com/questions/3338030/multiple-bash-traps-for-the-same-signal
+cleanup_resources () {
+  # TODO chaining resource cleanup see, https://stackoverflow.com/questions/3338030/multiple-bash-traps-for-the-same-signal
+  # don't fail fast, during cleanup
+  set +e
 
   for i in /proc /sys /dev; do
     umount "$mnt/$i";
@@ -110,25 +120,25 @@ resources_cleanup () {
   rmdir "$mnt"
 }
 
-trap resources_cleanup EXIT
+trap cleanup_resources EXIT
 
 
-losetup -f $target /dev/loop0 || exit
-losetup -f $target -o $((2048 * 512)) /dev/loop1 || exit
+losetup -f $target /dev/loop0
+losetup -f $target -o $((2048 * 512)) /dev/loop1
 
 
 # mkfs
-mkfs.ext4 /dev/loop1 || exit
+mkfs.ext4 /dev/loop1
 
 # grab filesystem uuid for later
 UUID=$( blkid -p -s UUID /dev/loop1 | sed 's/.*="\([^"]*\).*/\1/' )
 
 
 # mount  the device
-mount /dev/loop1 "$mnt" || exit
+mount /dev/loop1 "$mnt"
 
 # copy debootstrap
-cp -rp $cache/* "$mnt" || exit
+cp -rp $cache/* "$mnt"
 
 
 ############################
@@ -137,11 +147,17 @@ cp -rp $cache/* "$mnt" || exit
 # mount systems
 for i in /proc /sys /dev; do
   mount -B $i "$mnt/$i";
-done || exit
+done
 
+# discover kernel version...
+# KERNEL=$( apt-cache search linux-image | cut -d ' ' -f 1 | egrep '^linux-image-[0-9\.-]{5,}amd64$' | sed 's/linux-image-\(.*\)/\1/' )
 
 # chroot and install kernel, boot config, ssh
 chroot --userspec=0:0 "$mnt" <<- EOF
+
+# fail fast
+set -e
+
 # Install kernel
 apt-get -y install linux-image-$KERNEL
 

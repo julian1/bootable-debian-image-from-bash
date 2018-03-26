@@ -13,7 +13,7 @@ fi
 
 
 target=$1
-mnt="./build/mnt"
+mnt="./mnt"
 
 set -x
 

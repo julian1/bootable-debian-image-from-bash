@@ -1,6 +1,6 @@
 #!/bin/bash -x
 
-mnt="./build/mnt"
+mnt="./mnt"
 
 set -x
 
