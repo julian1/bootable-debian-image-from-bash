@@ -24,6 +24,7 @@ PYTHON=yes
 # sanity
 
 if [[ $EUID -ne 0 ]]; then
+   # also, require root for correct debootstrap dir permissions.
    echo "Must be root for mount/losetup"
    exit 1
 fi
@@ -47,6 +48,7 @@ fi
 ############################
 # debootstrap download and cache
 
+# log
 set -x
 
 # fail fast
@@ -58,7 +60,6 @@ set -e
 cache="./cache/$DIST"
 target="./build/$DIST-$KERNEL.img"
 mnt="./mnt"
-
 
 
 # delete stale cache. eg. 1 day.

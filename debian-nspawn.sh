@@ -18,7 +18,7 @@ PYTHON=yes
 
 # check privs
 if [[ "$EUID" -ne 0 ]]; then
-   # also correct debootstrap permissions.
+   # also, require root for correct debootstrap dir permissions, during copy.
    echo "Must run as root for mount/losetup" 
    exit 1
 fi
@@ -34,12 +34,20 @@ fi
 
 
 ############################
+# debootstrap download and cache
 
+# log
 set -x
 
+# fail fast
+set -e
 
-cache="./build/$DIST-cache"
+[ -d ./cache ] || mkdir ./cache
+[ -d ./build ] || mkdir ./build
+
+cache="./cache/$DIST"
 target="./build/$DIST.chroot"
+
 
 # maybe delete stale cache. eg. 1 day.
 if [ -d "$cache" ]; then
@@ -55,16 +63,17 @@ fi
 
 
 # download bootstrap files locally. note use || exit
-[ ! -d "$cache" ] && debootstrap "$DIST" "$cache/" $MIRROR
+[ -d "$cache" ] || debootstrap "$DIST" "$cache/" $MIRROR
+
 
 
 ############################
 # build filesystems
 
-rm -rf "$target"
+rm -rf "$target" || true
 
 # copy debootstrap files across to mnt
-cp -rp "$cache" $target || exit
+cp -rp "$cache" $target
 
 
 ############################
@@ -73,6 +82,9 @@ cp -rp "$cache" $target || exit
 
 # install config, ssh
 chroot --userspec=0:0 $target <<- EOF
+
+# fail fast
+set -e
 
 cat > /etc/network/interfaces << EOF2
 auto lo
