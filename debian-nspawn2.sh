@@ -62,7 +62,7 @@ cp -rp "$cache" $target
 # install kernel, and configure
 
 
-# this will give us root login, install python minimal, and then run ansible...
+# this will give us ssh root login. expect root ssh pubkeys to be injected. can then do python minimal-install, and then run ansible...
 
 chroot --userspec=0:0 $target <<- EOF
 
