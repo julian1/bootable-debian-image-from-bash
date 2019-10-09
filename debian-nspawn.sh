@@ -19,7 +19,7 @@ PYTHON=yes
 # check privs
 if [[ "$EUID" -ne 0 ]]; then
    # also, require root for correct debootstrap dir permissions, during copy.
-   echo "Must run as root for mount/losetup" 
+   echo "Must run as root for mount privs" 
    exit 1
 fi
 
